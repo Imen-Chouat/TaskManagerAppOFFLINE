@@ -1,7 +1,9 @@
 import React from "react";
-import { Text , View , StyleSheet } from "react-native" ;
+import { Text , View , StyleSheet, Pressable } from "react-native" ;
 import Icon from "react-native-vector-icons/FontAwesome";
+import { Image } from "expo-image";
 import { Platform } from "react-native";
+import Icons from "../constants/Icons";
     const colors = [
         ["#40E0D0","#cefffaff"],
         ["rgba(133, 148, 40, 1)","#DFFF00"],
@@ -14,20 +16,22 @@ import { Platform } from "react-native";
     ];
     let index = 0 ;
     let color0 , color1  ;
-export default function TaskPageCard ({task}){
+export default function TaskPageCard({task,onPress}){
+    index = task.id % (colors.length -1 )  ;
     color0 = colors[index][0];
     color1 = colors[index][1];
-    index = index +1 == colors.length ? 0 : index + 1 ;
+
     return(
+        <Pressable onPress={()=>{onPress()}}>
         <View style={[styles.container,styles.shadow]}>
             <View style={styles.topColumn}>
-                <Text style={styles.categoryName} >{task.category.name}</Text>
-                <View style={[styles.iconWraper,{backgroundColor:color1 , borderColor:color0 , borderWidth:1}]} >
-                   <Icon name={task.category.icon} style={styles.categoryIcon} color={color0} size={16} />
+                <View style={styles.textColumn} >
+                    <Text style={styles.categoryName} >{task.category.name}</Text>
+                    <Text style={styles.title}>{task.title}</Text>
                 </View>
-            </View>
-            <View style={styles.textColumn} >
-                <Text style={styles.title}>{task.title}</Text>
+                <View style={[styles.iconWraper,{backgroundColor:color1 , borderColor:color0 , borderWidth:1}]} >
+                    <Image source={Icons[task.icon]} style={styles.categoryIcon}/>
+                </View>
             </View>
             <View style={styles.lastColumn} >
                 <View style={styles.timeBlock} >
@@ -39,6 +43,7 @@ export default function TaskPageCard ({task}){
                 </View>
             </View>
         </View>
+        </Pressable>
     );
 }
 
@@ -52,7 +57,7 @@ const styles = StyleSheet.create({
     },topColumn:{
         flexDirection:"row",
         justifyContent:"space-between",
-        marginBottom: 4,
+        marginBottom: 10,
         alignItems:"center"
         
     },categoryName:{
@@ -62,11 +67,12 @@ const styles = StyleSheet.create({
     },iconWraper:{
         justifyContent:"center",
         alignItems:"center" ,
-        aspectRatio:1 ,
-        padding:7 ,
-        borderRadius:10
+        aspectRatio: 1 ,
+        padding: 5 ,
+        borderRadius: 10
     },categoryIcon:{
-
+        width: 30 ,
+        height: 30 , 
     },textColumn:{
         marginBottom: 7
     },title:{

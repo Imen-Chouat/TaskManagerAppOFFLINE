@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet , Text ,View , Platform } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
+import Icons from "../constants/Icons";
+import { Image } from "expo-image";
 import * as Progress from "react-native-progress";
     const colors = [
         ["#40E0D0","#cefffaff"],
@@ -12,6 +13,7 @@ import * as Progress from "react-native-progress";
         ["#FF9142","#ffd1afff"],
         ["#FFD12E","#ffeba4ff"] 
     ];
+
 let randIndex = 0;
 export default function CategoryCard({category}){
     const [categoryTasks,setTasks] = useState(Math.round(Math.random()*100));
@@ -22,7 +24,7 @@ export default function CategoryCard({category}){
     return(
         <View style={[styles.container,styles.shadow]}>
             <View style={[styles.iconWraper,{backgroundColor: `${color1}` }]}>
-            <Icon name={category.icon} size={20} color={color[0]}/>
+                <Image source={Icons[category.icon]} style={{width:40 , height: 40 }} contentFit="contain"/>
             </View>
             <View style={styles.categoryContainer}>
                 <Text style={styles.name} >{category.name}</Text>
@@ -49,14 +51,14 @@ const styles = StyleSheet.create({
         borderRadius: 15 ,
         boxShadow:""
     },iconWraper:{
-        width:30 ,
         hight:30 ,
         justifyContent:"center" ,
         alignItems: "center",
         borderRadius: 10 ,
         padding: 5 ,
+        marginLeft:4
     },categoryContainer:{
-        width:"70%",
+        minWidth:"60%",
         flexDirection:"column",
         marginLeft:10
     },name:{

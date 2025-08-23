@@ -5,8 +5,8 @@ export default StyleSheet.create({
    mainScroll: {
     paddingBottom: 170 ,
     flex: 1
-  },
-  scrollContent: {
+    },
+    scrollContent: {
     paddingBottom: 170, 
     flexGrow: 1 
     

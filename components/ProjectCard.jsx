@@ -1,8 +1,11 @@
-import React, {useState , useEffect} from "react";
+import React, {useState , useEffect } from "react";
 import * as Progress from "react-native-progress" ;
-import  Icon  from "react-native-vector-icons/FontAwesome";
-import { StyleSheet , Text , View } from "react-native";
-    const colors = [
+import Icons from "../constants/Icons";
+import { Image } from "expo-image";
+import { StyleSheet , Text , View ,Pressable} from "react-native";
+import * as SecureStore from "expo-secure-store";
+import { useNavigation } from "expo-router";
+const colors = [
         ["#DE3163","#ffabc3ff"],
         ["#40E0D0","#9cf0e7ff"], 
         ["#CCCCFF","#8181d4ff"],
@@ -11,21 +14,26 @@ import { StyleSheet , Text , View } from "react-native";
         ["#c2cf6cff","rgba(133, 148, 40, 1)"],
         ["#ffd1afff","#FF9142"],   
         ["#b69a33ff","#FFD12E"] ,
-    ];
-
+];
 let colorO ;
 let index = 0 ;
 export default function ProjectCard({project}){
+    const navigator = useNavigation(); 
     const color = colors[index];
     index = (index+ 1) == colors.length ? 0 : (index + 1) ;
     colorO = color[1] ;
 
     return(
-    <View style={[styles.projectContainer,{ backgroundColor: `${colorO}` }]} >
+    <Pressable onPress={async()=>{
+        console.log(project);
+        await SecureStore.setItemAsync("project",JSON.stringify(project));
+        navigator.navigate("ProjectInfoPage");
+    }}>
+    <View style={[styles.projectContainer,{ backgroundColor: `${colorO}` }]}>
         <View style={styles.categoryContainer}>
             <Text style={styles.categoryName}>{project.category.name}</Text>
             <View style={[styles.iconWraper,{backgroundColor:`${color[0]}`}]}>
-                <Icon name={project.category.icon} size={20} style={styles.icon} color={"#FFFFFF"}/>
+                <Image source={Icons[project.image]} style={{width:40,height:40}} />
             </View>
         </View>
         <Text style={styles.title}>{project.title}</Text>
@@ -40,6 +48,7 @@ export default function ProjectCard({project}){
         style={styles.bar}
         />
     </View>
+    </Pressable>
     );
 };
 const styles = StyleSheet.create({
@@ -64,13 +73,11 @@ const styles = StyleSheet.create({
         top:-5,
         right:-5,
         backgroundColor:"rgba(255, 255, 255, 1)",
-        width: 40 ,
         alignItems: "center",
         alignSelf:"center" ,
         justifyContent:"center",
         borderRadius: 16 ,
-        aspectRatio: 1 ,
-        height: 40
+        padding: 3
     },title:{
         marginTop:5 ,
         marginBottom:7 ,

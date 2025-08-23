@@ -1,5 +1,5 @@
 // src/screens/Home.js
-import React , { useState , useEffect, use } from 'react';
+import React , { useState , useEffect } from 'react';
 import { View, Text, StyleSheet, Button, ScrollView, Alert ,Pressable} from 'react-native';
 import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -7,28 +7,57 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Progress from 'react-native-progress';
 import * as SecureStore from 'expo-secure-store';
 import TabBar from '../components/TabBar';
-import HomeStyle from '../Styles.js/HomeStyle';
+import HomeStyle from '../Styles/HomeStyle';
 import ViewHomeButton from '../components/elements/ViewHomeButton';
 import CategoryCard from '../components/CategoryCard';
 import LoadingPage from './LoadingPage';
 import ProjectCard from '../components/ProjectCard';
 import CreateCaategoryButton from '../components/elements/CreateCategoryButton';
 import databaseService from '../services/dataBaseService' ;
+import CreateCategory from '../components/CreateCategory';
 export default function Home() {
   const [user,setUser]=useState(null);
-  const [taskList,setTaskList] = useState([]);
-  const [projectList,setProjectList] = useState([]);
-  const [percentage,setPercentage] = useState(-1);
-  const [categories,setCategories] = useState([]);
+  const [projectList,setProjectList] = useState([
+    {id:1,title:"Grocery Shop App design .",description:"The project Description",category:{name:"Personel Projects",icon: "online-test"},percentage:70,image:"online-test",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:2,title:"Grocery Shop App Implemetation .",description:"The project Description",category:{name:"Office Project",icon: "quality"},percentage:30,image:"quality",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:3,title:"Hour Shop App testing .",description:"The project Description",category:{name: "Education Tasks",icon: "mushroom"},percentage:10,image:"mushroom",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:4,title:"love island critisizing .",category:{name:"Daily Tasks",icon: "spaghetti"},percentage:90,
+  image:"spaghetti",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:5,title:"Grocery Shop App design .",category:{name:"Personel Projects",icon: "workout"},percentage:70,
+  image:"workout",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:6,title:"Grocery Shop App Implemetation .",category:{name:"Office Project",icon: "website"},percentage:30,
+  image:"website",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:7,title:"Hour Shop App testing .",category:{name: "Education Tasks",icon: "party-hat"},percentage:10,
+  image:"party-hat",start_date:"2025-07-08",end_date:"2025-08-18"},
+    {id:9,title:"love island critisizing .",category:{name:"Daily Tasks",icon: "gamer"},percentage:90,
+  image:"gamer",start_date:"2025-07-08",end_date:"2025-08-18"},
+  ]);
+  const [percentage,setPercentage] = useState(0);
+  const [categories,setCategories] = useState([
+    {id:1,name:"Daily Tasks",icon: "airplane"},  
+    {id:11,name:"Daily Tasks",icon: "books"},  
+    {id:2,name: "Education Tasks",icon: "night"},
+    {id:3,name:"Office Project",icon: "drawing"},
+    {id:4,name:"Personel Projects",icon: "calendar"},
+    {id:5,name:"Personel Projects",icon: "clock"},
+    {id:10,name:"Daily Tasks",icon: "data-analysis"},  
+    {id:6,name: "Education Tasks",icon: "fortune-teler"},
+    {id:7,name:"Office Project",icon: "diploma"},
+    {id:8,name:"Personel Projects",icon: "draft"},
+    {id:9,name:"Personel Projects",icon: "pizza"}
+  ]);
   const [loading,setLoading] = useState(true);
-  const profileUrl = SecureStore.getItemAsync("profileUrl") || "../assets/images/profile.png";
+  const [visible,setVisibility] = useState(false);
+  const defaultUrl = "../assets/images/profile.png";
   const navigation = useNavigation();
+ 
   const fetchProjects = async ()=>{
     try {
       const userSt = await SecureStore.getItemAsync("user");
       const parsed = JSON.parse(userSt);
       const fetched = await databaseService.getOngoingProjects(parsed.id);
-      setProjectList(fetched);
+      console.log("Project list : ",fetched,"it's length : ",fetched?.length );
+      setProjectList(fetched || []);
     } catch (error) {
       console.error("Error fetching the projects",error);
       Alert.alert("Error","Error fetching the projects for this user");
@@ -39,25 +68,58 @@ export default function Home() {
     try {
       const userS = await SecureStore.getItemAsync("user");
       const userParsed = JSON.parse(userS);
-      const fetced = await databaseService.getUserCategories(userParsed.id);
+      const fetched = await databaseService.getUserCategories(userParsed.id);
+      console.log("Categories list : ",fetched,"it's length : ",fetched?.length );
+      await SecureStore.setItemAsync("categories",JSON.stringify(fetched));
+      setCategories(fetched);
     } catch (error) {
       console.error("Error fetching the categories !",error);
-      Alert.alert('Error',"Error getting the user categories.");
+    }
+  }
+  const fetchPercentage = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+       const fetchedUser = await SecureStore.getItemAsync("user");
+       const currentUser = JSON.parse(fetchedUser);
+      const stats = await databaseService.getDoneTasksStatics(currentUser.id,today);
+      setPercentage(stats.completionRatio);
+    } catch (error) {
+      console.error("Error in fetching the percentage in the home page .",error);
     }
   }
   const fetchData = async () => {
-    const userSt = await SecureStore.getItemAsync("user");
-    console.log(userSt);
-    setUser(JSON.parse(userSt));
-    //await fetchProjects();
-    //await fetchCategories();
-    if(user && projectList && categories) setLoading(false);
+    setLoading(true);
+    try {
+       const userSt = await SecureStore.getItemAsync("user");
+      console.log(userSt);
+      setUser(JSON.parse(userSt));
+      await SecureStore.setItemAsync("categories",JSON.stringify(categories));
+      //await fetchProjects();
+      await fetchCategories();
+      await fetchPercentage();
+    } catch (error) {
+      console.error("Error fetching the data in home !",error);
+    }finally {
+      setLoading(false);
+    }
   }
   useEffect( ()=>{
     fetchData();
   },[]);
+  const getProfileImage =  () => {
+    try {
+      if(user.image == 0){
+        return require(defaultUrl);
+      }else {
+        return {url: FileSystem.documentDirectory + "profile.png"} ;
+      }
+    } catch (error) {
+      console.log("Error getting the profile url !",error);
+    }
+
+  } 
   return (
-    (user && projectList && categories ) ?  (
+    (!loading ) ?  (
       <View style={styles.container}>
       <ScrollView 
           style={styles.mainScroll}
@@ -67,7 +129,7 @@ export default function Home() {
           <Pressable onPress={()=>{
             console.log("pressed"); 
             navigation.navigate('ProfilePage')  }} >
-            <Image source={require('../assets/images/profile.png')} style={styles.profileImage}/>
+            <Image source={getProfileImage()} style={styles.profileImage} contentFit='cover'/>
           </Pressable>
 
           <View style={styles.welcomeBlock}>
@@ -84,8 +146,9 @@ export default function Home() {
           </View>
           <View style={styles.circleContainer}>
           <Progress.Circle
-          style={styles.circle} progress={0.85} size={100} thickness={10} borderWidth={0} color="#ffa65dff" 
-          unfilledColor="#EEE9FF" showsText={true} textStyle={styles.circleText} formatText={() => '85%'}/>
+          style={styles.circle} progress={percentage} size={100} thickness={10} borderWidth={0} color="#ffa65dff" 
+          unfilledColor="#EEE9FF" showsText={true} textStyle={styles.circleText} 
+          formatText={() => `${percentage*100}%`}/>
           </View>
         </View>
 
@@ -120,7 +183,8 @@ export default function Home() {
                 <Text style={styles.count}>{categories.length}</Text> 
             </View>
           </View>
-          <CreateCaategoryButton title="Create Category!" onPress={()=>{}}/>
+          <CreateCaategoryButton title="Create Category!" onPress={()=>{setVisibility(true)}}/>
+          <CreateCategory user={user} visible={visible} onClose={()=>{setVisibility(false)}} />
         </View>
         
         {categories.length == 0 ? (

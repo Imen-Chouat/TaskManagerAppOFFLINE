@@ -2,7 +2,7 @@ import React, { useActionState, useEffect }  from "react";
 import TabBar from "../components/TabBar";
 import { View ,ScrollView , Text} from "react-native";
 import { useState } from "react";
-import CalenderPageStyle from "../Styles.js/CalenderPageStyle";
+import CalenderPageStyle from "../Styles/CalenderPageStyle";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Calendar } from "react-native-calendars";
 import dayjs from 'dayjs';

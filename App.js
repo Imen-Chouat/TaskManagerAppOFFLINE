@@ -17,7 +17,8 @@ import TasksPage from './screens/TasksPage'
 import ProjectsPage from './screens/ProjectsPage';
 import LoadingPage from './screens/LoadingPage';
 import ProfilePage from './screens/ProfilePage';
-
+import AddProjectPage from './screens/AddProjectPage';
+import ProjectInfoPage from './screens/ProjectInfoPage'
 const Stack = createNativeStackNavigator();
 export default function App() {
   const [token,setToken] = useState(null);
@@ -38,8 +39,7 @@ export default function App() {
         const storedToken = await SecureStore.getItemAsync("token");
         console.log("Stored Token :",storedToken);
         setToken(storedToken);
-
-        console.log("Initialization success:",token ? true : false);
+        console.log("Initialization success, token :",token ? true : false);
       } catch (error) {
         console.error("Initialization error:", error);
       } finally {
@@ -67,6 +67,8 @@ export default function App() {
         <Stack.Screen name="ProjectsPage" component={ProjectsPage} />
         <Stack.Screen name="LoadingPage" component={LoadingPage} />
         <Stack.Screen name="ProfilePage" component={ProfilePage} />
+        <Stack.Screen name="AddProjectPage" component={AddProjectPage} />
+        <Stack.Screen name="ProjectInfoPage" component={ProjectInfoPage} />
       </Stack.Navigator>
     </NavigationContainer>
   );

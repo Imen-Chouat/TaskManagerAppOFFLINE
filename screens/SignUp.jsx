@@ -1,7 +1,7 @@
 import React , {useState ,useRef, useEffect} from "react";
 import { Button, TextInput, View, Text , Image, Alert } from "react-native";
 import  Icon  from "react-native-vector-icons/FontAwesome";
-import SignUpStyle  from "../Styles.js/SignUpStyle" ;
+import SignUpStyle  from "../Styles/SignUpStyle" ;
 import { LinearGradient } from "expo-linear-gradient";
 import SignButton from "../components/elements/SignButton";
 import { useNavigation } from '@react-navigation/native';
@@ -33,8 +33,8 @@ export default function SignUp(){
         return compare ;
     }
     useEffect(()=>{
-        SecureStore.setItemAsync("token",null);
-        SecureStore.setItemAsync("user",null);
+        SecureStore.setItemAsync("token","null");
+        SecureStore.setItemAsync("user","null");
     },[]);
     const handleSignUp = async () => {
         try {
@@ -53,7 +53,7 @@ export default function SignUp(){
         let user = await dataBaseService.getUserByEmail(email);
         if(user){
             setLoading(false);
-            Alert.alert('Error',"The email already exists , Sign up if you have an account !");
+            Alert.alert('Error',"The email already exists , Sign in if you have an account !");
             return ;
         }
         
@@ -62,6 +62,7 @@ export default function SignUp(){
             Alert.alert('Error',"The password and its confirmation are not consistent , recheck them !");
             return ;
         }
+
         const hashedPass = await authService.hashPassword(password);
         const id = await dataBaseService.createUser(name,email,hashedPass);
         if(!id){
@@ -69,10 +70,13 @@ export default function SignUp(){
             Alert.alert('Error',"Didn't insert the user !");
             return ;
         }
-         user = await dataBaseService.getUserByEmail(email);
+        user = await dataBaseService.getUserByEmail(email);
+        console.log(user);
         const {token,refreshToken} = await authService.generateTokens(user.id,name,email);
         await authService.saveTokens(token,refreshToken);
         await SecureStore.setItemAsync("user",JSON.stringify(user));
+        let get = await SecureStore.getItemAsync("user");
+        console.log(get);
         setLoading(false);
         Alert.alert('Success',"The sign up was successfull !");
         navigator.navigate("Home");

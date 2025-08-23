@@ -1,15 +1,29 @@
 import React ,{useState , useEffect} from "react";
-import { View , Text, ScrollView , Image} from "react-native";
+import { View , Text, ScrollView , Image, TouchableOpacity, Modal, TextInput} from "react-native";
 import CalendarStrip from "../components/CalendarStrip"
 import TabBar from "../components/TabBar"
-import TasksPageStyle from "../Styles.js/TasksPageStyle";
+import TasksPageStyle from "../Styles/TasksPageStyle";
 import TaskFilter from "../components/TaskFilter";
 import TaskPageCard from "../components/TaskPageCard";
+import TaskPageSelected from "../components/TaskPageSelected";
 
 export default function TasksPage(){
     const [day,setDay] =useState(new Date());
-    const [todayTasks,setTodayTasks] = useState([]);
-    const [filteredTasks,setFilteredTasks] = useState([]);
+    const [createModal,setCreateVisibility] = useState(false);
+    const [todayTasks,setTodayTasks] = useState([
+        {id:1,title:"Today task",category:{name:"random" ,icon:"airplane"},icon:"airplane",state:"Done",date:"2025-08-13",time:"07:23"} ,
+        {id:2,title:"Today task",category:{name:"random" ,icon:"book"},icon:"book",state:"To-do",date:"2025-08-13",time:"07:23"} , 
+        {id:3,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"In Progress",date:"2025-08-13",time:"07:23"} , 
+        {id:4,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"Missed",date:"2025-08-13",time:"07:23"}
+    ]);
+    const [filteredTasks,setFilteredTasks] = useState([
+        {id:1,title:"Today task",category:{name:"random" ,icon:"airplane"},icon:"airplane",state:"Done",date:"2025-08-13",time:"07:23"} ,
+        {id:2,title:"Today task",category:{name:"random" ,icon:"book"},icon:"book",state:"To-do",date:"2025-08-13",time:"07:23"} , 
+        {id:3,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"In Progress",date:"2025-08-13",time:"07:23"} , 
+        {id:4,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"Missed",date:"2025-08-13",time:"07:23"}
+    ]);
+    
+    const [selected,setSelected] = useState(null);
     const [type, setType]= useState("All");
     const handleDateChange = (dateString) => {
         console.log("Selected date:", dateString);
@@ -17,7 +31,6 @@ export default function TasksPage(){
         setDay(date);
         // Fetch tasks for selected date
     };
-
 
     const handlePress = (typ)=>{
         setType(typ);
@@ -59,6 +72,9 @@ export default function TasksPage(){
             <Text style={[styles.emptyMessage,{color:"hsla(90, 5%, 8%, 0.97)"}]}>{message}</Text>
         </View>);
     }
+    useEffect(()=>{
+
+    },[]);
     return(
         <View style={styles.container}>
             <ScrollView   style={styles.scroll}
@@ -73,12 +89,27 @@ export default function TasksPage(){
                         renderEmptyTasks()
                     ) : (
                         filteredTasks.map((task)=>(
-                            <TaskPageCard task={task} key={task.id} />
+                            (task == selected) ? (
+                                <TaskPageSelected task={task} key={task.id} onPress={()=>{setSelected(null)}} />
+                                
+                            ):(
+                            <TaskPageCard task={task} key={task.id} onPress={()=>{setSelected(task)}} />
+                            )
                         ))  
                     )
                 }
                 </View>
             </ScrollView>
+            <TouchableOpacity onPress={()=>{setCreateVisibility(true)}}>
+                <Text>+</Text>
+            </TouchableOpacity>
+            <Modal>
+                <View style={styles.createModalBackground}>
+                    <View style={styles.createModalContent} >
+                        <TextInput  />
+                    </View>
+                </View>
+            </Modal>
             <TabBar/>
         </View>
     );

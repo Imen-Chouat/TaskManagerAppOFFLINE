@@ -1,9 +1,11 @@
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { TouchableOpacity , StyleSheet,Text} from "react-native";
 
 export default function ViewHomeButton({text}){
+    const navigator = useNavigation();
     return(
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={()=>{navigator.navigate("TasksPage")}}>
             <Text style={styles.buttonText}>{text}</Text>
         </TouchableOpacity>
     );

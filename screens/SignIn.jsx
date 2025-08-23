@@ -2,7 +2,7 @@
 import React , { useState , useRef} from 'react';
 import { View, Text , Image , TextInput, Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import SignInStyle from '../Styles.js/SignInStyle';
+import SignInStyle from '../Styles/SignInStyle';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SignButton from '../components/elements/SignButton';

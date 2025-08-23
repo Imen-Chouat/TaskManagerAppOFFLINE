@@ -15,7 +15,8 @@ export default function TabBar({ style }) {
 
   const handleTabPress = (tabName, screen) => {
     activeTab = tabName;
-    navigation.navigate(screen);
+      navigation.navigate(screen);
+
   };
 
   return (
