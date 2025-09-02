@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, Modal, FlatList } from "react
 import { MaterialIcons } from "@expo/vector-icons";
 import Icons from "../constants/Icons";
 import { Image } from "expo-image";
-export default function CategorySelector({ categories, category, onPress ,style }) {
+export default function CategorySelector({ categories, category, onPress ,style , page }) {
     const [modalVisibility, setVisibility] = useState(false);
     const [selected, setSelected] = useState(category);
 
@@ -22,7 +22,7 @@ export default function CategorySelector({ categories, category, onPress ,style 
     }
     return (
         <View style={style}>
-            <View style={styles.block}>
+            <View style={page == "project" ? styles.block : styles.blockTask }>
                 <Image source={Icons[selected.icon]} style={styles.icon} />
                 <View style={styles.textContainer}>
                     <Text style={styles.label}>Project Category</Text>
@@ -74,8 +74,17 @@ const styles = StyleSheet.create({
         borderColor: "#ccc",
         borderRadius: 10,
         backgroundColor: "#fff",
-    },
-    textContainer: {
+    },blockTask:{
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 6 ,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 10,
+        backgroundColor: "#fff", 
+        marginVertical: 5
+    },textContainer: {
         flex: 1,
         marginLeft: 10,
     },

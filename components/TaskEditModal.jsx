@@ -51,6 +51,7 @@ export default function TaskEditModal({task,visible,onClose}){
             console.log(newTask);
             const updated = await dataBaseService.updateTask(task.id,newTask);
             console.log("lol",updated);
+            onClose();
         } catch (error) {
             console.error("Eroor updating the tasks info!");
         }

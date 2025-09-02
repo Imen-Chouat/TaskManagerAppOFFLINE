@@ -32,5 +32,20 @@ export default StyleSheet.create({
     },emptyImage:{
         resizeMode:"contain",
         width:"110%",
+    },createTaskButtin: {
+        position: "absolute" ,
+        bottom: "7%" ,
+        right: "4%" ,
+        backgroundColor: "#0f4ea0", 
+        borderRadius: 100 ,
+        width: 60 ,
+        height: 60 ,
+        justifyContent: "center" ,
+        alignItems: "center" ,
+        zIndex: 5
+    },createText:{
+        fontSize: 40 ,
+        fontWeight: "900" ,
+        color: "#fff"
     }
 });

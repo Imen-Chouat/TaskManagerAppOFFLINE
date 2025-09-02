@@ -6,7 +6,10 @@ import TasksPageStyle from "../Styles/TasksPageStyle";
 import TaskFilter from "../components/TaskFilter";
 import TaskPageCard from "../components/TaskPageCard";
 import TaskPageSelected from "../components/TaskPageSelected";
-
+import CreateTaskModal from "../components/CreateTaskModal";
+import * as SecureStore from "expo-secure-store" ;
+import dataBaseService from "../services/dataBaseService";
+import LoadingPage from "./LoadingPage";
 export default function TasksPage(){
     const [day,setDay] =useState(new Date());
     const [createModal,setCreateVisibility] = useState(false);
@@ -22,9 +25,10 @@ export default function TasksPage(){
         {id:3,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"In Progress",date:"2025-08-13",time:"07:23"} , 
         {id:4,title:"Today task",category:{name:"random" ,icon:"night"},icon:"night",state:"Missed",date:"2025-08-13",time:"07:23"}
     ]);
-    
+    const[user,setUser] = useState(null);
     const [selected,setSelected] = useState(null);
     const [type, setType]= useState("All");
+    const [loading,setLoading] = useState(true);
     const handleDateChange = (dateString) => {
         console.log("Selected date:", dateString);
         const date = new Date(dateString);
@@ -72,10 +76,33 @@ export default function TasksPage(){
             <Text style={[styles.emptyMessage,{color:"hsla(90, 5%, 8%, 0.97)"}]}>{message}</Text>
         </View>);
     }
+    const fetchTasks = async () => {
+        try {
+            const userStored = await SecureStore.getItemAsync("user");
+            const userParsed = JSON.parse(userStored);
+            setUser(userParsed);
+            const tasksFectched = await dataBaseService.getUserTasksOnDate(userParsed.id,(new Date()).toISOString().split('T')[0]);
+            console.log(tasksFectched,userParsed);
+            setTodayTasks(tasksFectched);
+            setFilteredTasks(tasksFectched);
+        } catch (error) {
+            console.error("Error fetching the tasks on task page : ",error);
+        }
+    }
     useEffect(()=>{
-
+        try {
+            fetchTasks();
+        } catch (error) {
+            
+        }finally{
+            setLoading(false);
+        }
+        
     },[]);
     return(
+        loading ? (
+            <LoadingPage/>
+        ):(
         <View style={styles.container}>
             <ScrollView   style={styles.scroll}
             contentContainerStyle={[{paddingBottom: filteredTasks.length == 0 ? 0 : 124 }]}
@@ -99,19 +126,16 @@ export default function TasksPage(){
                     )
                 }
                 </View>
+
             </ScrollView>
-            <TouchableOpacity onPress={()=>{setCreateVisibility(true)}}>
-                <Text>+</Text>
+             <TouchableOpacity style={styles.createTaskButtin} onPress={()=>{setCreateVisibility(true)}}>
+                <Text style={styles.createText} >+</Text>
             </TouchableOpacity>
-            <Modal>
-                <View style={styles.createModalBackground}>
-                    <View style={styles.createModalContent} >
-                        <TextInput  />
-                    </View>
-                </View>
-            </Modal>
+            <CreateTaskModal visible={createModal} projectId={-1} onClose={()=>setCreateVisibility(false)} />
             <TabBar/>
-        </View>
+        </View>            
+        )
+
     );
 }
 

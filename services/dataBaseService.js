@@ -1,3 +1,4 @@
+import { constructFromSymbol } from "date-fns/constants";
 import * as SQLite from "expo-sqlite";
 
 let db;
@@ -6,9 +7,9 @@ const defaultProjectImage = "";
 const initDB = async () => {
   try {
     db = await SQLite.openDatabaseAsync("TaskManagerDB");
-    await db.execAsync(`DROP TABLE IF EXISTS projects ;`);
-      await db.execAsync(`
-      PRAGMA foreign_keys = ON;
+    //await db.execAsync(`DROP TABLE IF EXISTS projects;`);
+    await db.execAsync(`
+      PRAGMA foreign_keys = ON; 
 
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,7 +36,7 @@ const initDB = async () => {
         end_date TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         description TEXT DEFAULT '',
-        icon TEXT DEFAULT '',
+        image TEXT DEFAULT '',
         FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
@@ -47,7 +48,7 @@ const initDB = async () => {
         date TEXT NOT NULL,
         state TEXT DEFAULT 'To-do',
         category_id INTEGER NOT NULL,
-        project_id INTEGER DEFAULT -1,
+        project_id INTEGER DEFAULT NULL,
         icon TEXT DEFAULT '' ,
         FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -61,7 +62,7 @@ const initDB = async () => {
         FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
       );
     `);
-
+    await displayDB();
     console.log("✅ Database initialized successfully");
     return db;
   } catch (error) {
@@ -69,6 +70,27 @@ const initDB = async () => {
   }
 };
 
+const displayDB = async () => {
+  try {
+    const users = await db.getAllAsync(`SELECT * FROM users`);
+    const projects = await db.getAllAsync(`SELECT * FROM projects`);
+    const tasks = await db.getAllAsync(`SELECT * FROM tasks`);
+    const categories = await db.getAllAsync(`SELECT * FROM categories`);
+    const userTasks = await db.getAllAsync(`SELECT * FROM userTasks`);
+    console.log("users : ");
+    console.log(users);
+    console.log("projects : ");
+    console.log(projects);
+    console.log("tasks : ");
+    console.log(tasks);
+    console.log("categories : ");
+    console.log(categories);
+    console.log("userTasks : ");
+    console.log(userTasks);
+  } catch (error) {
+    console.error("Error clearing the db tables : ",error);
+  }
+}
 const checkBdInitialization = async () => {
   try {
     if(!db){
@@ -82,7 +104,7 @@ const checkBdInitialization = async () => {
 const getUserByEmail = async (email) => {
   try {
     await checkBdInitialization();
-    const result = db.getFirstAsync(`SELECT * FROM users WHERE email = ? LIMIT 1`,[email]);
+    const result = await db.getFirstAsync(`SELECT * FROM users WHERE email = ? LIMIT 1`,[email]);
     return result || null ;
   } catch (error) {
     console.error("Error in finding the email's user :",error);
@@ -102,8 +124,8 @@ const createUser = async (user_name,email,password_hash)=>{
 const deleteAccount = async (id)=> {
   try {
     await checkBdInitialization();
-    const {rowAffected} = await db.runAsync(`DELETE FROM users WHERE id = ?`,[id]);
-    return rowAffected ;
+    const {changes} = await db.runAsync(`DELETE FROM users WHERE id = ?`,[id]);
+    return changes ;
   } catch (error) {
     console.error("Error deleting the account :",error);
   }
@@ -112,18 +134,18 @@ const deleteAccount = async (id)=> {
 const modifyProfile = async (id,{user_name,email,password,image}) => {
   try {
     await checkBdInitialization();
-    let rowAffected = 0 ;
+    let changes = 0 ;
     if(user_name){
-      ({rowAffected} = await db.runAsync(`UPDATE users SET user_name = ? WHERE id = ?`,[user_name,id]) );
+      ({changes} = await db.runAsync(`UPDATE users SET user_name = ? WHERE id = ?`,[user_name,id]) );
     }
     if(email){
-      ({rowAffected} = await db.runAsync(`UPDATE users SET email = ? WHERE id = ?`,[email,id]) );
+      ({changes} = await db.runAsync(`UPDATE users SET email = ? WHERE id = ?`,[email,id]) );
     }
     if(password){
-      ({rowAffected} = await db.runAsync(`UPDATE users SET password = ? WHERE id = ?`,[password,id]) );
+      ({changes} = await db.runAsync(`UPDATE users SET password = ? WHERE id = ?`,[password,id]) );
     }
     if(image){
-      ({rowAffected} = await db.runAsync(`UPDATE users SET image = ? WHERE id = ?`,[image,id]) );
+      ({changes} = await db.runAsync(`UPDATE users SET image = ? WHERE id = ?`,[image,id]) );
     }
   } catch (error) {
     console.error("Error modifying the profile : ",error);
@@ -174,14 +196,14 @@ const createCategory = async (user_id,name,icon) => {
 const modifyCategory = async (id , {name,icon}) => {
   try {
     await checkBdInitialization();
-    let rowAffected = 0 ;
+    let changes = 0 ;
     if(name){
-      ({rowAffected} = await db.runAsync(`UPDATE categories SET name = ? WHERE id = ?`,[name,id]) );
+      ({changes} = await db.runAsync(`UPDATE categories SET name = ? WHERE id = ?`,[name,id]) );
     }
     if(icon){
-      ({rowAffected} = await db.runAsync(`UPDATE categories SET icon = ? WHERE id = ?`,[icon,id]) );
+      ({changes} = await db.runAsync(`UPDATE categories SET icon = ? WHERE id = ?`,[icon,id]) );
     }
-    return rowAffected ;
+    return changes ;
   } catch (error) {
     console.error("Error modifying the category : ",error);
   }
@@ -190,8 +212,8 @@ const modifyCategory = async (id , {name,icon}) => {
 const deleteCategory = async (id) => {
   try {
     await checkBdInitialization();
-    const {rowAffected} = await db.runAsync(`DELETE FROM categories WHERE id = ?`,[id]);
-    return rowAffected ;
+    const {changes} = await db.runAsync(`DELETE FROM categories WHERE id = ?`,[id]);
+    return changes ;
   } catch (error) {
     console.error("Error deleting the category : ",error);
   }
@@ -208,23 +230,30 @@ const getUserCategories = async (id) => {
 }
 
 const createTask = async (user_id,title,project_id,date,time,state,category_id,icon)=>{
-  try {
+    try {
     await checkBdInitialization();
-    const {lastInsertRowId} = await db.runAsync(`INSERT INTO tasks (title,state,time,date,project_id,category_id,icon) VALUES(?,?,?,?,?,?,?) `,[title,state,time,date,project_id,category_id,icon]);
+    const {lastInsertRowId} = await db.runAsync(`INSERT INTO tasks (title,state,time,date,project_id,category_id,icon) VALUES(?,?,?,?,?,?,?) `,[title,state,time,date,project_id == -1 ? null : project_id,category_id,icon]);
+    console.log(lastInsertRowId);
     if(project_id == -1 ){
-      const result = await db.runAsync(`INSERT INTO userTasks (user_id,task_id) VALUES (?,?)`,[user_id,lastInsertRowId]);
+      await connectTaskUser(user_id,lastInsertRowId)
     }
     return lastInsertRowId ;
   } catch (error) {
     console.error(`Error creating task `,error);
   }
 }
-
+const connectTaskUser = async (user_id,task_id) => {
+  try {
+    const result = await db.runAsync(`INSERT INTO userTasks (user_id,task_id) VALUES (?,?)`,[user_id,task_id]);
+  } catch (error) {
+    console.error("Error connecting the task with the user : ",error);
+  }
+}
 const deleteTask = async (task_id) => {
   try {
     await checkBdInitialization();
-    const {rowAffected} = await db.runAsync(`DELETE FROM tasks WHERE id = ?`,[task_id]);
-    return rowAffected ;
+    const {changes  } = await db.runAsync(`DELETE FROM tasks WHERE id = ?`,[task_id]);
+    return changes ;
   } catch (error) {
     console.error("Error deleting a task :",error);
   }
@@ -233,27 +262,33 @@ const deleteTask = async (task_id) => {
 const updateTask = async (task_id, {title,state, time, date, category_id,icon}) => {
   try {
     await checkBdInitialization();
-    let rowAffected = 0;
+    let changesAll = 0 , changes ;
     if (title) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET title = ? WHERE id = ?`, [title, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET title = ? WHERE id = ?`, [title, task_id]));
+      changesAll += changes ;
     }
     if (state) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET state = ? WHERE id = ?`, [state, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET state = ? WHERE id = ?`, [state, task_id]));
+      changesAll += changes ;
     }
     if (time) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET time = ? WHERE id = ?`, [time, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET time = ? WHERE id = ?`, [time, task_id]));
+      changesAll += changes ;
     }
     if (date) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET date = ? WHERE id = ?`, [date, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET date = ? WHERE id = ?`, [date, task_id]));
+      changesAll += changes ;
     }
     if (category_id) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET category_id = ? WHERE id = ?`, [category_id, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET category_id = ? WHERE id = ?`, [category_id, task_id]));
+      changesAll += changes ;
     }
     if(icon) {
-      ({rowAffected} = await db.runAsync(`UPDATE tasks SET icon = ? WHERE id = ?`, [icon, task_id]));
+      ({changes} = await db.runAsync(`UPDATE tasks SET icon = ? WHERE id = ?`, [icon, task_id]));
+      changesAll += changes ;
     }
     
-    return rowAffected || -1;
+    return changesAll || -1;
   } catch (error) {
     console.error("Error updating the task:", error);
     throw error; // It's good practice to re-throw the error after logging
@@ -270,7 +305,7 @@ const getTaskByID = async (task_id) => {
           state: result.state ,
           time: result.time ,
           date: result.date ,
-          icon: task.icon ,
+          icon: result.icon ,
           category
     } || null;
   } catch (error) {
@@ -286,6 +321,7 @@ const getUserTasksOnDate = async (id ,date)=> {
       tasks.map( async (task)=>{
         const category = await getCategoryByid(task.category_id);
         return {
+          id: task.id ,
           title: task.title ,
           state: task.state ,
           time: task.time ,
@@ -340,6 +376,8 @@ const projectPersentage = async (projectID) => {
   try {
     await checkBdInitialization();
     const tasks = await getProjectTasks(projectID);
+
+    if(! tasks || tasks.length == 0 ) return 0 ;
     let completed = 0 ;
     tasks.forEach((task)=>{if(task.state == "Done") completed++ ;});
     return Math.round( ( completed / tasks.length ) * 100 );
@@ -358,16 +396,17 @@ const getOngoingProjects = async (id)=>{
     const result = await Promise.all(
       projects.map(async (project)=>{
         const category = await getCategoryByid(project.category_id);
-        const persentage = await projectPersentage(project.id);
+        console.log(project.id);
+        const percentage = await projectPersentage(project.id);
         return {
         id : project.id,
         title : project.title,
         start_date : project.start_date,
-        finish_date : project.end_date,
+        end_date : project.end_date,
         description : project.description,
         image : project.image,
         category ,
-        persentage
+        percentage
         };
       })
     );
@@ -383,17 +422,17 @@ const getProjects = async (id)=>{
     const projects = await db.getAllAsync(`SELECT * FROM projects WHERE user_id = ?`,[id]);
     const result = Promise.all(
       projects.map( async (project) => {
-        const persentage = await projectPersentage(project.id);
+        const percentage = await projectPersentage(project.id);
         const category = await getCategoryByid(project.category_id);
         return {
         id : project.id,
         title : project.title,
         start_date : project.start_date,
-        finish_date : project.end_date,
+        end_date : project.end_date,
         description : project.description,
         image : project.image,
         category ,
-        persentage
+        percentage
         };
       })
     );
@@ -437,26 +476,31 @@ const createProject = async (user_id,title , start_date , end_date , category_id
   }
 }
 
-const updateProject = async (project_id,{title,start_date,end_date,category_id,image}) => {
+const updateProject = async (project_id,{title,start_date,end_date,category_id,image,description}) => {
   try {
     await checkBdInitialization();
-    let rowAffected = 0 ;
+    let result ;
+    console.log("update Function : ",title,start_date,end_date,category_id,image);
     if(title){
-      ({rowAffected} = await db.runAsync(`UPDATE projects SET title = ? WHERE id = ?`,[title,project_id]) );
+      result = await db.runAsync(`UPDATE projects SET title = ? WHERE id = ?`,[title,project_id]) ;
     }
     if(start_date){
-      ({rowAffected} = await db.runAsync(`UPDATE projects SET start_date = ? WHERE id = ?`,[start_date,project_id]) );
+      result = await db.runAsync(`UPDATE projects SET start_date = ? WHERE id = ?`,[start_date,project_id]) ;
     }
     if(end_date){
-      ({rowAffected} = await db.runAsync(`UPDATE projects SET end_date = ? WHERE id = ?`,[end_date,project_id]) );
+      result= await db.runAsync(`UPDATE projects SET end_date = ? WHERE id = ?`,[end_date,project_id]) ;
     }
     if(category_id){
-      ({rowAffected} = await db.runAsync(`UPDATE projects SET category_id = ? WHERE id = ?`,[category_id,project_id]) );
+      result= await db.runAsync(`UPDATE projects SET category_id = ? WHERE id = ?`,[category_id,project_id]) ;
     }
     if(image){
-      ({rowAffected} = await db.runAsync(`UPDATE projects SET image = ? WHERE id = ?`,[image,project_id]) );
+      result= await db.runAsync(`UPDATE projects SET image = ? WHERE id = ?`,[image,project_id]) ;
     }
-    return rowAffected ;
+    if(description){
+      result= await db.runAsync(`UPDATE projects SET description = ? WHERE id = ?`,[description,project_id]) ;
+    }
+    console.log("the id in update function :",result);
+     return result ;
   } catch (error) {
     console.error("Error updating the project's info : ",error);
   }
@@ -466,8 +510,8 @@ const updateProject = async (project_id,{title,start_date,end_date,category_id,i
 const deleteProject = async (id) => {
   try {
     await checkBdInitialization();
-    const {rowAffected} = await db.runAsync(`DELETE  FROM projects WHERE id = ?`,[id]);
-    return rowAffected
+    const {changes} = await db.runAsync(`DELETE  FROM projects WHERE id = ?`,[id]);
+    return changes
   } catch (error) {
     console.error("Error deleting the project : ",error);
   }
@@ -476,7 +520,9 @@ const deleteProject = async (id) => {
 const getProjectByID = async (project_id) => {
   try {
     await checkBdInitialization();
+    console.log(project_id);
     const result = await db.getFirstAsync(`SELECT * FROM projects WHERE id = ?`,[project_id]);
+    console.log(result);
     const persentage = await projectPersentage(project_id);
     const category = await getCategoryByid(result.category_id);
     return {

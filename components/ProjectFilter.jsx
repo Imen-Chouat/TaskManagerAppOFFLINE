@@ -5,12 +5,12 @@ import { ScrollView, StyleSheet , TouchableOpacity, View ,Text} from "react-nati
 export default function ProjectFilter ({style , onPress}) {
     const [selected , setSelected ] = useState("In Progress");
     const tabs = ["All","In Progress" , "Past","Comming"];
-    const handleFiltering = async (tab) => {
+    const handleFiltering = (tab) => {
         onPress(tab);
         setSelected(tab);
     }
     return(
-        <ScrollView style={[styles.container,style]} horizontal={true} showsHorizontalScrollIndicator={false} >
+        <ScrollView style={[styles.container]} horizontal={true} showsHorizontalScrollIndicator={false} >
             {
              tabs.map((tab,index) => (
                 <TouchableOpacity style={selected == tab ? [ styles.tab ,  styles.selected ]: styles.tab } 
@@ -25,7 +25,8 @@ export default function ProjectFilter ({style , onPress}) {
 const styles = StyleSheet.create({
     container : {
         padding: 10 , 
-        minHeight: 80
+        marginBottom: 0 ,
+        maxHeight: 75 
     },tab:{
         paddingHorizontal: 20 ,
         borderRadius: 25 ,

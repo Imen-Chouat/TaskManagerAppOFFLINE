@@ -19,7 +19,7 @@ const colors = [
 ];
 let colorO ;
 let index = 0 ;
-export default function ProjectCard({project,onClose}){
+export default function ProjectCard({project,onClose,onDelete}){
     const navigator = useNavigation(); 
     index = project.id % colors.length ;
     const color = colors[index];
@@ -27,14 +27,16 @@ export default function ProjectCard({project,onClose}){
     const handleDelete = async () => {
         try {
             const result = await dataBaseService.deleteProject(project.id);
+            onDelete(project.id);
             return result ;
         } catch (error) {
             console.error(`Error deleting =${project.title}:`,error);
         }
     }
+
     return(
     <Pressable onPress={async()=>{
-        console.log(project);
+        //console.log(project);
         await SecureStore.setItemAsync("project",JSON.stringify(project));
         onClose();
     }} style={{minWidth: "93%" , maxWidth:"93%" , marginBottom: 14 }} >
@@ -76,8 +78,8 @@ export default function ProjectCard({project,onClose}){
                 <Text style={styles.buttonText} >Edit tasks</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={ async () => {
-                onClose();
                 await handleDelete();
+                onClose();
             } } style={[styles.deleteButton , styles.button]} >
                 <Text style={styles.buttonText} >Delete</Text>
             </TouchableOpacity>

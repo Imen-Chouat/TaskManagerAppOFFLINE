@@ -23,12 +23,12 @@ export default function ProjectCard({project , onPress}){
     const color = colors[index];
     colorO = color[1] ;
     useEffect(()=>{
-        console.log(project);
+        
     },[]);
     return(
     <Pressable onPress={async()=>{
         onPress();
-        console.log(project);
+        //console.log(project);
         await SecureStore.setItemAsync("project",JSON.stringify(project));
     }} style={{minWidth:"93%" , maxWidth: "93%" , marginBottom: 12 }}>
     <View style={[styles.projectContainer,{ backgroundColor: `${colorO}` }]}>
@@ -43,7 +43,7 @@ export default function ProjectCard({project , onPress}){
         <Text style={styles.dateText} >to : {project.end_date}</Text>
         <View style={{flexDirection:"row" , alignItems:"center"}} >
             <Progress.Bar
-            progress={project.percentage*0.01}
+            progress={project.percentage *0.01}
             width={250}
             height={9}
             color={color[0]}

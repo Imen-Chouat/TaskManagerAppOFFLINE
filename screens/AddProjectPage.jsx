@@ -15,8 +15,8 @@ export default function AddProjectPage(){
     const [project,setProject] = useState(null);
     const [user,setUser] = useState(null);
     const [title,setTitle] = useState("");
-    const [startDate,setStart] = useState(new Date());
-    const [endDate,setEnd] = useState();
+    const [startDate,setStart] = useState(null);
+    const [endDate,setEnd] = useState(null);
     const [description,setDescription] = useState("");
     const [category,setCategory] = useState();
     const [imageUrl,setUrl] = useState();
@@ -30,13 +30,14 @@ export default function AddProjectPage(){
     const {type} = route.params || {};
     const maxlength = 255 ;
     const checkUpdate = ( ) => {
-        let result = {title:null,description:null,start_date:null,end_date:null,category_id:null} ;
+        let result = {title:null,description:null,start_date:null,end_date:null,category_id:null,image:null} ;
         if(project.title != title ) result.title = title ;
         if(project.description != description ) result.description = description ;
-        if(project.start_date != startDate ) result.start_date = startDate.toISOString().split('T')[0] ;
-        if(project.end_date != endDate) result.end_date = endDate.toISOString().split('T')[0];
+        if(project.start_date != startDate.toISOString().split('T')[0] ) result.start_date = startDate.toISOString().split('T')[0] ;
+        if(project.end_date != endDate.toISOString().split('T')[0] ) result.end_date = endDate.toISOString().split('T')[0];
         if(project.category.id != category.id) result.category_id = category.id ;
-        if(project.title != title || project.descption != descption || project.start_date != startDate 
+        if(project.image !== imageUrl) result.image = imageUrl ;
+        if(project.title != title || project.description != description || project.start_date != startDate 
             || project.end_date != endDate || project.category.id != category.id) {
                 return result ;
             }
@@ -44,7 +45,7 @@ export default function AddProjectPage(){
     }
     const handleCreate = async () => {
         try {
-            if(!title || !startDate || !endDate || !descption || !category ){
+            if(!title || !startDate || !endDate || !description || !category ){
                 let message = [] ;
                 if(!title) message.push("Title");
                 if(!startDate) message.push("Start Date");
@@ -62,6 +63,7 @@ export default function AddProjectPage(){
                     text:"Yes!" ,
                     onPress:async ()=>{
                         try {
+                            console.log()
                             const created = await databaseSevice.createProject(user.id,title,startDate.toISOString().split('T')[0],endDate.toISOString().split('T')[0],category.id,description,imageUrl) ;
                             if(!created){
                                 Alert.alert("Error","Error creating the new project!");
@@ -83,6 +85,7 @@ export default function AddProjectPage(){
     }
     const handleUpdate = async () => {
         const newP = checkUpdate();
+        
         if(!newP) {
             Alert.alert("No update!","Make sure you update one of the project information first.");
         }
@@ -95,13 +98,16 @@ export default function AddProjectPage(){
                     text:"Yes!",
                     onPress: async () => {
                         try {
-
+                               
                                 const updated = await databaseSevice.updateProject(project.id,newP);
-                                const fetched = await databaseSevice.getProjectByID(updated);
+                                console.log(updated);
+                                const fetched = await databaseSevice.getProjectByID(project.id);
+                                setProject(project);
+                                console.log("fetched",fetched);
                                 Alert.alert("Updated!",`We updated the project under the title ${fetched.title}`);
                                 return;
                         } catch (error) {
-                            console.error("Error creating project:", error);
+                            console.error("Error updating project:", error);
                         }
                     }
                 }
@@ -145,25 +151,30 @@ export default function AddProjectPage(){
             setUser(userParsed);
             const projectStored = await SecureStore.getItemAsync("project");
             const projectParsed = JSON.parse(projectStored);
+            console.log(projectStored);
             setProject(projectParsed);
             const categoriesStored = await SecureStore.getItemAsync("categories");
             const categoriesParsed = JSON.parse(categoriesStored);
             setCategories(categoriesParsed);
-            const date = new Date();
-            setStart(date);
-            const tommorow = addDays(date,1);
-            setEnd(tommorow);
             setTitle("");
             
             if(type == "create"){
                 if(categoriesParsed.length > 0) setCategory(categoriesParsed[0]);
                 setDescription("");
+                setTitle("");
+                const date = new Date();
+                setStart(date);
+                const tommorow = addDays(date,1);
+                setEnd(tommorow);
                 setUrl(null);
             }else{
                 setCategory(projectParsed.category);
                 setUrl(projectParsed.image);
                 setDescription(projectParsed.description);
                 setTitle(projectParsed.title);
+                setStart(new Date(projectParsed.start_date));
+                setEnd(new Date(projectParsed.end_date));
+                //console.log(projectParsed);
             }
         } catch (error) {
             console.error("Error fetching the data in creating /updationg project page",error)
@@ -174,7 +185,7 @@ export default function AddProjectPage(){
     useEffect(()=>{
         console.log(type);
         fetchData();
-        console.log(project);
+
     },[]);
 
     return (
@@ -183,17 +194,17 @@ export default function AddProjectPage(){
        ) : (
         <View style={styles.container}>
             <View style={styles.upperSide}>
-                <TouchableOpacity onPress={()=>{navigator.goBack()}} style={styles.arrowLeftWrapper}>
+                        <TouchableOpacity onPress={()=>{navigator.goBack()}} style={styles.arrowLeftWrapper}>
                     <Image style={styles.arrowLeft} source={require("../assets/icon/emptyLeftArrow.png")} contentFit="contain"  />
                 </TouchableOpacity>
 
                 <Text style={styles.pageTitle} >Manage your Project</Text>
             </View>
             <CategorySelector categories={categories} category={category} onPress={(item) => {setCategory(item)}} 
-                style={styles.iconSelector}/>
+                style={styles.iconSelector} page={"project"}  />
             <View>
                 <Text style={styles.titleText} >Project Title</Text>
-                <TextInput style={styles.titleInput} value={title} onChangeText={setTitle} />
+                <TextInput placeholder="Please enter your project title here !" style={styles.titleInput} value={title} onChangeText={setTitle} />
             </View>
 
             <View style={{flexDirection:"row" , marginBottom: 10 ,  alignItems:"center"} } >
@@ -253,7 +264,7 @@ export default function AddProjectPage(){
                         renderItem={({item})=> {
                             const [key,src] = item ;
                             return(
-                            <TouchableOpacity style={styles.imageWraper} onPress={()=>{handleIconSelect(key)}}>
+                            <TouchableOpacity style={key == imageUrl ? [styles.imageWraper,styles.iconOn] : styles.imageWraper } onPress={()=>{handleIconSelect(key)}}>
                                 <Image source={src} style={styles.image} />
                             </TouchableOpacity>
                             );

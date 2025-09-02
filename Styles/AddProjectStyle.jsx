@@ -87,7 +87,7 @@ export default StyleSheet.create({
         marginBottom: 14
     },imageContainer:{
         padding: 10 ,
-        backgroundColor: "#000000ff" ,
+        backgroundColor: "rgba(17, 128, 192, 1)"  ,
         borderRadius: 10 ,
         margin: 10
     },projectImage: {
@@ -109,13 +109,16 @@ export default StyleSheet.create({
         fontWeight:"bold",
         fontSize: 16
     },imageWraper:{
-        borderRadius:3 ,
+        borderRadius:10 ,
         padding:5,
         borderColor:"rgba(0, 0, 0, 1)",
-        borderWidth:0.5
+        borderWidth:0.5 ,
+        margin: 1
+    },iconOn:{
+        backgroundColor: "rgba(17, 128, 192, 1)" 
     },image:{
-        width:60 ,
-        height:60 
+        width:58 ,
+        height:58 
     },closeModal:{
         backgroundColor:"rgba(163, 39, 39, 1)" ,
         borderRadius:40 ,
@@ -130,10 +133,10 @@ export default StyleSheet.create({
         alignSelf: "center" ,
         paddingVertical: 10 ,
         paddingHorizontal: 25 ,
-        borderColor: "rgba(0, 183, 255, 1)" ,
-        borderWidth: 2 ,
+        borderColor: "rgba(8, 139, 25, 1)" ,
+        borderWidth: 1 ,
         borderRadius: 16 ,
-        backgroundColor: "rgba(17, 128, 192, 1)" ,
+        backgroundColor: "rgba(66, 122, 160, 1)" ,
         marginTop: 15 ,
     },buttonText:{
         fontSize: 16 ,
