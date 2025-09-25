@@ -45,11 +45,14 @@ export default function ProjectsPage(){
 
     const categorizeProjects = (list) => {
     const today = new Date();
+    const Past = getTypeProjects("Past",list);
+    const Comming = getProjects("Comming",list);
+    const Inprogress = getProjects("In Progress",list);
     return {
         All: list,
-        "In Progress": list.filter(p => new Date(p.start_date) <= today && new Date(p.end_date) >= today),
-        Past: list.filter(p => new Date(p.end_date) < today),
-        Comming: list.filter(p => new Date(p.start_date) > today),
+        "In Progress": Inprogress,
+        Past ,
+        Comming ,
     };
     };
 
